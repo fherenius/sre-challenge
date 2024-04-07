@@ -1,15 +1,20 @@
 import sqlite3
 import logging
+import os
 from flask import Flask, session, redirect, url_for, request, render_template, abort
 
 
 app = Flask(__name__)
-app.secret_key = b"192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5dc987d54727823bcbf"
+
+# Don't store the secret key in app code, but inject as env variable at runtime
+app.secret_key = os.getenv('APP_SECRET_KEY', default='INVALID_KEY_GIVEN')
 app.logger.setLevel(logging.INFO)
 
 
+# TODO: Check existence of filename
 def get_db_connection():
-    connection = sqlite3.connect("database.db")
+    # Changed to a readonly connection, since we're only using SELECT queries
+    connection = sqlite3.connect("file:database.db?mode=ro", uri=True)
     connection.row_factory = sqlite3.Row
     return connection
 
@@ -22,17 +27,33 @@ def is_authenticated():
 
 def authenticate(username, password):
     connection = get_db_connection()
-    users = connection.execute("SELECT * FROM users").fetchall()
+
+    # Use a single query to see if the username & password combination exists
+    # instead of retrieving all users/passwords and looping over it.
+    # Use Parameter Binding to prevent SQL injection
+    is_valid_credentials = connection.execute(
+        """
+            SELECT 
+                id
+            FROM 
+                users 
+            WHERE
+                username = :username
+            AND 
+                password = :password
+        """,
+        {"username": username, "password": password},
+    ).fetchone()
     connection.close()
 
-    for user in users:
-        if user["username"] == username and user["password"] == password:
-            app.logger.info(f"the user '{username}' logged in successfully with password '{password}'")
-            session["username"] = username
-            return True
+    # Fail early
+    if not is_valid_credentials:
+        app.logger.warning(f"User '{username}' has failed to login.")
+        abort(401)
 
-    app.logger.warning(f"the user '{ username }' failed to log in '{ password }'")
-    abort(401)
+    app.logger.info(f"User '{username}' has succesfully logged in.")
+    session["username"] = username
+    return True
 
 
 @app.route("/")
@@ -56,5 +77,8 @@ def logout():
     return redirect(url_for("index"))
 
 
+# TODO: Bind on a different host
+# TODO: Define readyz, healthz and livez endpoints
+# Readyz should check database connection
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
