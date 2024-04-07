@@ -7,7 +7,7 @@ from flask import Flask, session, redirect, url_for, request, render_template, a
 app = Flask(__name__)
 
 # Don't store the secret key in app code, but inject as env variable at runtime
-app.secret_key = os.getenv('APP_SECRET_KEY', default='INVALID_KEY_GIVEN')
+app.secret_key = os.getenv("APP_SECRET_KEY", default="INVALID_KEY_GIVEN")
 app.logger.setLevel(logging.INFO)
 
 
