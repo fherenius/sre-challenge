@@ -12,7 +12,7 @@ app.logger.setLevel(logging.INFO)
 
 
 # TODO: Check existence of filename
-def get_db_connection():
+def get_read_only_db_connection():
     # Changed to a readonly connection, since we're only using SELECT queries
     connection = sqlite3.connect("file:database.db?mode=ro", uri=True)
     connection.row_factory = sqlite3.Row
@@ -26,7 +26,7 @@ def is_authenticated():
 
 
 def authenticate(username, password):
-    connection = get_db_connection()
+    connection = get_read_only_db_connection()
 
     # Use a single query to see if the username & password combination exists
     # instead of retrieving all users/passwords and looping over it.
