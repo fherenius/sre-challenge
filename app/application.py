@@ -31,6 +31,7 @@ def authenticate(username, password):
     # Use a single query to see if the username & password combination exists
     # instead of retrieving all users/passwords and looping over it.
     # Use Parameter Binding to prevent SQL injection
+    # TODO: Rewrite to use a salted + hashed password, use bcrypt
     is_valid_credentials = connection.execute(
         """
             SELECT 
