@@ -14,5 +14,8 @@ target "app" {
     tags = [
         "${REGISTRY}/app:latest"
     ]
+    contexts = {
+        "src" = "../app/"
+    }
 }
 

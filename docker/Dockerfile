@@ -48,7 +48,7 @@ RUN useradd --create-home -u 1000 python
 # Use `chown` and `chmod` to set the correct permissions
 # TODO: Check --chmod to set the correct permissions. Should be 500 and 400
 COPY --link --from=builder --chown=1000:1000 /opt/venv /opt/venv
-COPY --link --chown=1000:1000 ./app /home/python/app
+COPY --link --from=src --chown=1000:1000 ./ /home/python/app
 
 # Run as the python user from this point
 USER 1000
