@@ -59,4 +59,5 @@ jobs:
       - name: Build and push
         uses: docker/bake-action@v4
         with:
+          source: docker
           push: true
