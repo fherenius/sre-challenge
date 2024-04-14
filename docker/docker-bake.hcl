@@ -3,6 +3,14 @@ variable "REGISTRY" {
     default = "$REGISTRY"
 }
 
+variable "IMAGE_NAME" {
+    default = "app"
+}
+
+variable "REPOSITORY" {
+    default = "${REGISTRY}/${IMAGE_NAME}
+}
+
 group "default" {
     targets = [
         "app"
@@ -12,7 +20,7 @@ group "default" {
 target "app" {
     dockerfile = "Dockerfile"
     tags = [
-        "${REGISTRY}/app:latest"
+        "${REPOSITORY}:latest"
     ]
     contexts = {
         "src" = "../app/"
