@@ -1,9 +1,107 @@
 ---
-- name: Create virtual machine
-  run_once: true
-  proxmox_kvm:
+# Retrieves the cloud-init image to boot from
+- name: Get cloud-init image
+  register: cloud_init_image
+  ansible.builtin.get_url: 
+    url: "{{ image.base_url }}{{ image.name }}"
+    dest: "/var/lib/vz/images/0/{{ image.name }}"
+    mode: '0644'
+
+- name: Create new VM template from cloud-init image
+  vars:
+    ssh_key_path: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
+  community.general.proxmox_kvm:
     api_user: "{{ proxmox.api_user }}"
-    api_password: "{{ proxmox.api_password }}"
     api_host: "{{ proxmox.api_host }}"
-    name: "{{ item.value.name }}"
-    node: "{{ item.value.node }}"
+    api_token_id: "{{ proxmox.api_token_id }}"
+    # Token secret not included in the proxmox object, due to passing the secret
+    # at runtime through '--extra-vars'.
+    api_token_secret: "{{ api_token_secret }}"
+    node: "{{ template.node }}"
+    name: "{{ template.name }}"
+    bios: ovmf
+    boot: 'order=scsi0'
+    cores: 1
+    machine: q35
+    memory: 512
+    ostype: "l26"
+    efidisk0:
+      storage: "{{ template.storage }}"
+      format: raw
+      efitype: 4m
+      pre_enrolled_keys: 1
+    # Required for most cloud-init images: https://pve.proxmox.com/wiki/Cloud-Init_Support
+    serial:
+      serial0: 'socket'
+    vga: serial0
+    scsihw: 'virtio-scsi-single'
+    scsi:
+      # Import-from is a workaround: https://bugzilla.proxmox.com/show_bug.cgi?id=4141#c5
+      scsi0: "{{ template.storage }}:0,iothread=1,discard=on,import-from=local:0/{{ image.name }},format=raw"
+    ide:
+      ide2: "local:cloudinit,format=raw"
+    net:
+      net0: 'virtio,bridge=vmbr0,firewall=1'
+    sshkeys: "{{ lookup('ansible.builtin.file', '{{ ssh_key_path }}') }}"
+    template: true
+
+- name: Wait for template to be created
+  ansible.builtin.wait_for:
+    timeout: 20
+
+- name: Clone virtual machine from cloud-init template
+  register: cloned_vm
+  community.general.proxmox_kvm:
+    api_user: "{{ proxmox.api_user }}"
+    api_host: "{{ proxmox.api_host }}"
+    api_token_id: "{{ proxmox.api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    name: "{{ vm.name }}"
+    node: "{{ vm.node }}"
+    clone: "{{ template.name }}"
+    storage: "{{ vm.storage.type }}"
+
+- name: Grow disk of vm
+  community.general.proxmox_disk:
+    api_user: "{{ proxmox.api_user }}"
+    api_host: "{{ proxmox.api_host }}"
+    api_token_id: "{{ proxmox.api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    vmid: "{{ cloned_vm.vmid }}"
+    disk: scsi0
+    size: "{{ vm.storage.size }}"
+    state: resized
+
+- name: Update virtual machine configuration
+  community.general.proxmox_kvm:
+    api_user: "{{ proxmox.api_user }}"
+    api_host: "{{ proxmox.api_host }}"
+    api_token_id: "{{ proxmox.api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    vmid: "{{ cloned_vm.vmid }}"
+    node: "{{ vm.node }}"
+    # Set QEMU agent to true
+    agent: 1
+    cores: "{{ vm.cores }}"
+    memory: "{{ vm.memory }}"
+    ciuser: "{{ vm.user.name }}"
+    # Override with --extra-vars at runtime
+    cipassword: "{{ vm_user_password }}"
+    ipconfig:
+      ipconfig0: 'ip={{ vm.ip }}/24,gw={{ vm.gateway }}'
+    update: true
+
+- name: Start virtual machine
+  community.general.proxmox_kvm:
+    api_user: "{{ proxmox.api_user }}"
+    api_host: "{{ proxmox.api_host }}"
+    api_token_id: "{{ proxmox.api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    vmid: "{{ cloned_vm.vmid }}"
+    state: started
+
+# Cleanup of cloud-init imiage
+- name: Remove cloud-init image
+  ansible.builtin.file:
+    path: "{{ cloud_init_image.dest }}"
+    state: absent

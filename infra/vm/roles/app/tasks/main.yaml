@@ -1,0 +1,7 @@
+---
+- name: Setup virtual machine
+  import_tasks: 1-setup-host.yaml
+  tags: setup
+- name: Deploy application
+  import_tasks: 2-deploy-app.yaml
+  tags: deploy

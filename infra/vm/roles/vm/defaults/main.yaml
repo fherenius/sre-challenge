@@ -1,0 +1,24 @@
+proxmox: 
+  api_host: 127.0.0.1:8006
+  api_user: terraform@pve
+  api_token_id: terraform_token_id
+image:
+  base_url: "https://cloud.debian.org/images/cloud/bullseye/latest/"
+  # Genericcloud image refuses to start SSH, so generic image is used.
+  name: "debian-11-generic-amd64.qcow2"
+template:
+  name: cloud-init-template
+  node: kryten
+  storage: "local-lvm"
+vm:
+  name: app-01
+  node: kryten
+  cores: "1"
+  memory: "512"
+  ip: "192.168.1.225"
+  gateway: "192.168.1.1"
+  user:
+    name: python
+  storage: 
+    type: "local-lvm"
+    size: 32G

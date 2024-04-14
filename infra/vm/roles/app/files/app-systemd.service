@@ -1,0 +1,13 @@
+[Unit]
+Description=Runs a python application
+
+[Service]
+Type=simple
+WorkingDirectory=/home/python/app
+ExecStart=/home/python/app/venv/bin/python application.py
+Restart=on-failure
+StandardOutput=journal
+
+[Install]
+WantedBy=default.target
+

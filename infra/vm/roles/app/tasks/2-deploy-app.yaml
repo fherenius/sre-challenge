@@ -1,0 +1,44 @@
+---
+- name: Copy application code
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../app/"
+    dest: "/home/python/app"
+    owner: python
+    group: python
+    mode: '0444'
+
+- name: Setup virtual environment
+  ansible.builtin.pip:
+    virtualenv: /home/python/app/venv
+    requirements: /home/python/app/requirements.txt
+
+- name: Create systemd user service directory
+  ansible.builtin.file:
+    path: "/home/python/.config/systemd/user"
+    state: directory
+
+- name: Copy systemd service
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/roles/app/files/app-systemd.service"
+    dest: "/home/python/.config/systemd/user/app.service"
+    owner: python
+    group: python
+    mode: '0444'
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Enable systemd user service
+  ansible.builtin.systemd_service:
+    name: app.service
+    scope: user
+    enabled: true
+    masked: false
+      
+- name: Start systemd user service
+  ansible.builtin.systemd_service:
+    name: app.service
+    scope: user
+    state: started
+

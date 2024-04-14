@@ -1,0 +1,8 @@
+- name: Create virtual machine
+  hosts: proxmox
+  roles:
+    - vm
+- name: Setup virtual machine
+  hosts: app
+  roles:
+    - app

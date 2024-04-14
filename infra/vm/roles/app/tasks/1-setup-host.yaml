@@ -1,0 +1,15 @@
+---
+- name: Update repositories
+  become: true
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install dependencies
+  become: true
+  ansible.builtin.apt:
+    name:
+      - pip
+      - curl
+      - virtualenv
+    install_recommends: false
+    state: present
