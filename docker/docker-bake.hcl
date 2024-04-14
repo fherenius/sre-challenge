@@ -8,7 +8,7 @@ variable "IMAGE_NAME" {
 }
 
 variable "REPOSITORY" {
-    default = "${REGISTRY}/${IMAGE_NAME}
+    default = "${REGISTRY}/${IMAGE_NAME}"
 }
 
 group "default" {
