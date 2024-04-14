@@ -1,5 +1,5 @@
 ingress:
   host: app.k3s.lan
 image:
-  repository: github
+  repository: ghcr.io/fherenius/sre-challenge
   tag: latest
