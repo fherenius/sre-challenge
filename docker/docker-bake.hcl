@@ -1,6 +1,6 @@
 # $REGISTRY variable is set in github actions by default
 variable "REGISTRY" {
-    default = "$REGISTRY"
+    default = "local"
 }
 
 variable "IMAGE_NAME" {
@@ -9,6 +9,10 @@ variable "IMAGE_NAME" {
 
 variable "REPOSITORY" {
     default = "${REGISTRY}/${IMAGE_NAME}"
+}
+
+variable "COMMIT_SMA" {
+    default = "local"
 }
 
 group "default" {
@@ -20,7 +24,8 @@ group "default" {
 target "app" {
     dockerfile = "Dockerfile"
     tags = [
-        "${REPOSITORY}:latest"
+        "${REPOSITORY}:latest",
+        "${REPOSITORY}:${COMMIT_SHA}",
     ]
     contexts = {
         "src" = "../app/"
