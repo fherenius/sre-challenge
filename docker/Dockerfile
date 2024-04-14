@@ -23,7 +23,7 @@ RUN apt-get update && \
 RUN python3 -m venv /opt/venv
 
 # Install Python dependencies
-COPY --link app/requirements.txt ./
+COPY --link --from=src ./requirements.txt ./
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Runner image, uses a slim image and copies the app code + venv
