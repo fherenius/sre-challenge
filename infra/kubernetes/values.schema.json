@@ -6,12 +6,28 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "ingress": {
+                    "$ref": "#/definitions/Ingress"
+                },
                 "image": {
                     "$ref": "#/definitions/Image"
                 }
             },
             "required": [
+                "ingress",
                 "image"
+            ]
+        },
+        "Ingress": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "host": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "host"
             ]
         },
         "Image": {
