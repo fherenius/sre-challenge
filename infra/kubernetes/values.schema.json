@@ -1,0 +1,35 @@
+{
+    "$schema": "https://json-schema.org/schema",
+    "$ref": "#/definitions/Values",
+    "definitions": {
+        "Values": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "image": {
+                    "$ref": "#/definitions/Image"
+                }
+            },
+            "required": [
+                "image"
+            ]
+        },
+        "Image": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "repository": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "repository",
+                "tag"
+            ]
+        }
+    }
+}
+
