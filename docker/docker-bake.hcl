@@ -11,7 +11,7 @@ variable "REPOSITORY" {
     default = "${REGISTRY}/${IMAGE_NAME}"
 }
 
-variable "COMMIT_SMA" {
+variable "COMMIT_SHA" {
     default = "local"
 }
 
